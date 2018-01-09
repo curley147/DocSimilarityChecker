@@ -8,13 +8,13 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 
-public class MinHasher implements Runnable{
+public class Consumer implements Runnable{
 
 	private BlockingQueue<Shingle> q; 
 	private int[] hashes;
 	private int k;
 	private Map<Integer, List<Integer>> map = new HashMap<Integer, List<Integer>>();
-	public MinHasher(BlockingQueue<Shingle> q, int k) {
+	public Consumer(BlockingQueue<Shingle> q, int k) {
 		this.q = q;
 		this.k = k;
 	}
