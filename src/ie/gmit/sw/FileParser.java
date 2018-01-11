@@ -5,17 +5,19 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public class FileParser implements Runnable {
 
 	private String file;
 	private int shingleSize;
 	private BlockingQueue<Shingle> b;
+	private int docId;
 	
-	public FileParser(String file, int shingleSize) {
+	public FileParser(String file, int shingleSize, BlockingQueue<Shingle> b, int docId) {
 		this.file = file;
 		this.shingleSize = shingleSize;
+		this.b = b;
+		this.docId = docId;
 	}
 	public FileParser() {
 	
@@ -27,20 +29,19 @@ public class FileParser implements Runnable {
 			String line = null;
 			while((line = br.readLine())!=null) {
 				String[] words = line.split(" ");
-				Shingle shingleHash = null;			
-				for(int i = 0; i < words.length-(shingleSize-1); i+=shingleSize){
-					shingleHash.setShingleHashCode(words[i].concat(words[i+1]).concat(words[i+2].concat(words[i+3])).hashCode());
-					shingleHash.setDocId(this.file.hashCode());;
-					b.add(shingleHash);
-					//shingleHashes.add(shingleHash);
+				Shingle s = new Shingle();			
+				for(int i = 0; i < words.length-(shingleSize-1); i++){
+					s.setShingleHashCode(words[i].concat(words[i+1]).concat(words[i+2].concat(words[i+3])).hashCode());
+					s.setDocId(this.docId);;
 				}
-		        
+				b.put(s);
 			}
-			//System.out.println(shingleHashes);
-			
-			
+			System.out.println("files parsed");
 			br.close();
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

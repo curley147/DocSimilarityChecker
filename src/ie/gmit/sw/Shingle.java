@@ -8,6 +8,9 @@ public class Shingle {
 		this.docId = docId;
 		this.shingleHashCode = shingleHashCode;
 	}
+	public Shingle() {
+		
+	}
 	public int getDocId() {
 		return docId;
 	}
