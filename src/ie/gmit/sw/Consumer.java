@@ -2,13 +2,14 @@ package ie.gmit.sw;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class Consumer implements Runnable{
 
@@ -16,9 +17,9 @@ public class Consumer implements Runnable{
 	private int[] hashes;
 	private int k;
 	private ExecutorService pool;
-	private Map<Integer, List<Integer>> map = new HashMap<Integer, List<Integer>>();
+	private ConcurrentMap<Integer, List<Integer>> map = new ConcurrentHashMap<Integer, List<Integer>>();
 	
-	public Map<Integer, List<Integer>> getMap() {
+	public ConcurrentMap<Integer, List<Integer>> getMap() {
 		return map;
 	}
 	
@@ -42,16 +43,18 @@ public class Consumer implements Runnable{
 			try {
 				Shingle s = q.take();
 				// when s.getHashCode returns a poison indicating EOF
-				if(s.getShingleHashCode() !=48)
-				{
+				if(s instanceof Poison){
+					docCount--;
+				}
+				else {						
 					pool.execute(new Runnable() {
 						@Override
 						public void run() {
 							System.out.println("second run method");
 							List<Integer>list = map.get(s.getDocId());
 							for(int i=0;i<hashes.length;i++) {
-								System.out.println("hashes for loop");
 								int value = s.getShingleHashCode() ^ hashes[i];
+								list = map.get(s.getDocId());
 								if(list == null) {
 									list = new ArrayList<Integer>(Collections.nCopies(k, Integer.MAX_VALUE));
 									map.put(s.getDocId(),list);
@@ -62,14 +65,10 @@ public class Consumer implements Runnable{
 									}
 								}
 							} 
-							System.out.println("out of for loop");
-							map.put(s.getDocId(), list);			
+							map.put(s.getDocId(), list);		
 						}
 					});
-					System.out.println("finished first run");
-				}
-				else {						
-					docCount--;
+					System.out.println("finished second run");
 				}
 				
 				
@@ -80,12 +79,18 @@ public class Consumer implements Runnable{
 			 
 			
 		}
-		System.out.println("finished second run");
+		pool.shutdown();
+		try {
+			pool.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		List<Integer> intersection = map.get(1);
 		intersection.retainAll(map.get(2));
-		float jacquared = (float)intersection.size()/(k*2-(float)intersection.size());
+		float jaccard = (float)intersection.size()/(k*2-(float)intersection.size());
+		float percentageReturned = Math.round(jaccard)*100;
 		
-		System.out.println("J: " + jacquared);
+		System.out.println("The documents are " + percentageReturned + "% similar.");
 	}
 	
 }
