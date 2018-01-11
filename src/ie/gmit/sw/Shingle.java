@@ -1,5 +1,10 @@
 package ie.gmit.sw;
-
+/**
+ * This is the Shingle class and it contains a constructor and two member variables document ID and the shingle's hashcode
+ * It's methods include getters and setters for these variables
+ * @author Micheal Curley
+ *
+ */
 public class Shingle {
 	private int docId;
 	private int shingleHashCode;
